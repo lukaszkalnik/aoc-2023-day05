@@ -17,10 +17,8 @@ fun main() {
 
     var seeds = seedsAndMaps[0][0].split(": ")[1].split(" ").map { it.toLong() }
 
-    seedsAndMaps.drop(1).map {
-        it.map { line ->
-            line.split(" ").map { it.toLong() }
-        }
+    seedsAndMaps.drop(1).map { transformationMap ->
+        transformationMap.map { line -> line.split(" ").map { it.toLong() } }
     }.forEach { transformationMap ->
         seeds = seeds.map { it.transform(transformationMap) }
     }
