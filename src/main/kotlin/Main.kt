@@ -15,21 +15,33 @@ fun main() {
 
     val seedsAndMaps = sliceIndices.map { (from, to) -> input.slice(from..to) }
 
-    var seeds = seedsAndMaps[0][0].split(": ")[1].split(" ").map { it.toLong() }
+    val seeds = seedsAndMaps[0][0].split(": ")[1].split(" ").map { it.toLong() }
+        .windowed(size = 2, step = 2)
+        .map { (rangeStart, rangeLength) -> rangeStart..<rangeStart + rangeLength }
 
-    seedsAndMaps.drop(1).map { transformationMap ->
+    val transformationMapsReversed = seedsAndMaps.drop(1).map { transformationMap ->
         transformationMap.map { line -> line.split(" ").map { it.toLong() } }
-    }.forEach { transformationMap ->
-        seeds = seeds.map { it.transform(transformationMap) }
+    }.reversed()
+
+    var seed = 0L
+    var location = 0L
+
+    while (true) {
+        transformationMapsReversed.forEach {
+            seed = seed.transformBackwards(it)
+        }
+        if (seeds.any { seed in it }) break
+        ++seed
+        ++location
     }
 
-    println(seeds.min())
+    println(location)
 }
 
-fun Long.transform(transformationMap: List<List<Long>>): Long =
-    transformationMap.find { (_, sourceRangeStart, rangeLength) ->
-        this in sourceRangeStart..<sourceRangeStart + rangeLength
+fun Long.transformBackwards(transformationMap: List<List<Long>>): Long =
+    transformationMap.find { (destinationRangeStart, _, rangeLength) ->
+        this in destinationRangeStart..<destinationRangeStart + rangeLength
     }?.let { (destinationRangeStart, sourceRangeStart, _) ->
-        val offset = this - sourceRangeStart
-        destinationRangeStart + offset
+        val offset = this - destinationRangeStart
+        sourceRangeStart + offset
     } ?: this
