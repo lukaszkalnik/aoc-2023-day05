@@ -15,15 +15,17 @@ fun main() {
 
     val seedsAndMaps = sliceIndices.map { (from, to) -> input.slice(from..to) }
 
-    var seeds = seedsAndMaps[0][0].split(": ")[1].split(" ").map { it.toLong() }
+    val seeds = seedsAndMaps[0][0].split(": ")[1].split(" ").map { it.toLong() }
 
-    seedsAndMaps.drop(1).map { transformationMap ->
+    val transformationMaps = seedsAndMaps.drop(1).map { transformationMap ->
         transformationMap.map { line -> line.split(" ").map { it.toLong() } }
-    }.forEach { transformationMap ->
-        seeds = seeds.map { it.transform(transformationMap) }
     }
 
-    println(seeds.min())
+    val locations = transformationMaps.fold(seeds) { transformedSeeds, transformationMap ->
+        transformedSeeds.map { it.transform(transformationMap) }
+    }
+
+    println(locations.min())
 }
 
 fun Long.transform(transformationMap: List<List<Long>>): Long =
