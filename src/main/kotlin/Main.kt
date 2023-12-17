@@ -23,18 +23,17 @@ fun main() {
         transformationMap.map { line -> line.split(" ").map { it.toLong() } }
     }.reversed()
 
-    var seed = 0L
     var location = 0L
 
     while (true) {
-        transformationMapsReversed.forEach {
-            seed = seed.transformBackwards(it)
+        val seed = transformationMapsReversed.fold(location) { transformedLocation, transformationMap ->
+            transformedLocation.transformBackwards(transformationMap)
         }
         if (seeds.any { seed in it }) break
         ++location
-        seed = location
     }
 
+    check(location == 7873084L)
     println(location)
 }
 
