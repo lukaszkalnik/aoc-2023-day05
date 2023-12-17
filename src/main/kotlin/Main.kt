@@ -31,8 +31,8 @@ fun main() {
             seed = seed.transformBackwards(it)
         }
         if (seeds.any { seed in it }) break
-        ++seed
         ++location
+        seed = location
     }
 
     println(location)
