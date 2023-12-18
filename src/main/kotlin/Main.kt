@@ -45,7 +45,7 @@ data class TransformationMap(
 
 fun LongRange.transform(transformationMaps: List<TransformationMap>): List<LongRange> {
     val intersectingTransformationMaps = transformationMaps.filter {
-        first < it.sourceRangeStart + it.rangeLength || last >= it.sourceRangeStart
+        first < it.sourceRangeStart + it.rangeLength && last >= it.sourceRangeStart
     }.map {
         val offset = it.destinationRangeStart - it.sourceRangeStart
         val intersectingSourceRangeStart = it.sourceRangeStart.coerceAtLeast(first)
