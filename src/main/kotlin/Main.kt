@@ -16,22 +16,55 @@ fun main() {
     val seedsAndMaps = sliceIndices.map { (from, to) -> input.slice(from..to) }
 
     val seeds = seedsAndMaps[0][0].split(": ")[1].split(" ").map { it.toLong() }
+        .windowed(size = 2, step = 2)
+        .map { (rangeStart, rangeLength) -> rangeStart..<rangeStart + rangeLength }
 
-    val transformationMaps = seedsAndMaps.drop(1).map { transformationMap ->
-        transformationMap.map { line -> line.split(" ").map { it.toLong() } }
+    val transformationMapStages = seedsAndMaps.drop(1).map { transformationMap ->
+        transformationMap.map { line ->
+            val (destinationRangeStart, sourceRangeStart, rangeLength) = line.split(" ").map { it.toLong() }
+            TransformationMap(
+                destinationRangeStart = destinationRangeStart,
+                sourceRangeStart = sourceRangeStart,
+                rangeLength = rangeLength,
+            )
+        }.sortedBy { it.sourceRangeStart }
     }
 
-    val locations = transformationMaps.fold(seeds) { transformedSeeds, transformationMap ->
-        transformedSeeds.map { it.transform(transformationMap) }
+    val locations = transformationMapStages.fold(seeds) { transformedSeeds, transformationMap ->
+        transformedSeeds.flatMap { it.transform(transformationMap) }
     }
 
-    println(locations.min())
+    println(locations.minOf { it.first })
 }
 
-fun Long.transform(transformationMap: List<List<Long>>): Long =
-    transformationMap.find { (_, sourceRangeStart, rangeLength) ->
-        this in sourceRangeStart..<sourceRangeStart + rangeLength
-    }?.let { (destinationRangeStart, sourceRangeStart, _) ->
-        val offset = this - sourceRangeStart
-        destinationRangeStart + offset
-    } ?: this
+data class TransformationMap(
+    val destinationRangeStart: Long,
+    val sourceRangeStart: Long,
+    val rangeLength: Long,
+)
+
+fun LongRange.transform(transformationMaps: List<TransformationMap>): List<LongRange> {
+    val intersectingTransformationMaps = transformationMaps.filter {
+        first < it.sourceRangeStart + it.rangeLength || last >= it.sourceRangeStart
+    }.map {
+        val offset = it.destinationRangeStart - it.sourceRangeStart
+        val intersectingSourceRangeStart = it.sourceRangeStart.coerceAtLeast(first)
+        val intersectingDestinationRangeStart = intersectingSourceRangeStart + offset
+        val intersectingRangeLength = it.rangeLength.coerceAtMost(last - intersectingSourceRangeStart + 1)
+        TransformationMap(
+            destinationRangeStart = intersectingDestinationRangeStart,
+            sourceRangeStart = intersectingSourceRangeStart,
+            rangeLength = intersectingRangeLength,
+        )
+    }
+
+    return buildList {
+        intersectingTransformationMaps.fold(first) { first, transformationMap ->
+            if (first < transformationMap.sourceRangeStart) add(first until transformationMap.sourceRangeStart)
+            val destinationRangeEnd = transformationMap.destinationRangeStart + transformationMap.rangeLength
+            add(transformationMap.destinationRangeStart until destinationRangeEnd)
+            if (destinationRangeEnd < last) add(destinationRangeEnd until last)
+            last
+        }
+    }
+}
