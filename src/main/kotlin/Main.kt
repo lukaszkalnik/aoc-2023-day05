@@ -64,7 +64,7 @@ fun LongRange.transform(transformationMaps: List<TransformationMap>): List<LongR
         if (intersectingTransformationMaps.isEmpty()) {
             add(first..last)
         } else {
-            intersectingTransformationMaps.fold(first) { first, transformationMap ->
+            val lastTransformed = intersectingTransformationMaps.fold(first) { first, transformationMap ->
                 val sourceRangeStart = transformationMap.sourceRangeStart
                 if (first < sourceRangeStart) add(first until sourceRangeStart)
 
@@ -75,9 +75,9 @@ fun LongRange.transform(transformationMaps: List<TransformationMap>): List<LongR
                 add(destinationRangeStart until destinationRangeEnd)
 
                 val sourceRangeLast = sourceRangeStart + rangeLength - 1
-                if (sourceRangeLast < last) add(sourceRangeLast + 1..last)
-                last
+                sourceRangeLast
             }
+            if (last > lastTransformed) add(lastTransformed + 1..last)
         }
     }
 }
