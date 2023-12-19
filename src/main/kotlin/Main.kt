@@ -34,7 +34,9 @@ fun main() {
         transformedSeeds.flatMap { it.transform(transformationMap) }
     }
 
-    println(locations.minOf { it.first })
+    val minLocation = locations.minOf { it.first }
+    println(minLocation)
+    check(minLocation == 7873084L)
 }
 
 data class TransformationMap(
@@ -59,12 +61,23 @@ fun LongRange.transform(transformationMaps: List<TransformationMap>): List<LongR
     }
 
     return buildList {
-        intersectingTransformationMaps.fold(first) { first, transformationMap ->
-            if (first < transformationMap.sourceRangeStart) add(first until transformationMap.sourceRangeStart)
-            val destinationRangeEnd = transformationMap.destinationRangeStart + transformationMap.rangeLength
-            add(transformationMap.destinationRangeStart until destinationRangeEnd)
-            if (destinationRangeEnd < last) add(destinationRangeEnd until last)
-            last
+        if (intersectingTransformationMaps.isEmpty()) {
+            add(first..last)
+        } else {
+            intersectingTransformationMaps.fold(first) { first, transformationMap ->
+                val sourceRangeStart = transformationMap.sourceRangeStart
+                if (first < sourceRangeStart) add(first until sourceRangeStart)
+
+                val destinationRangeStart = transformationMap.destinationRangeStart
+                val rangeLength = transformationMap.rangeLength
+                val destinationRangeEnd = destinationRangeStart + rangeLength
+
+                add(destinationRangeStart until destinationRangeEnd)
+
+                val sourceRangeLast = sourceRangeStart + rangeLength - 1
+                if (sourceRangeLast < last) add(sourceRangeLast + 1..last)
+                last
+            }
         }
     }
 }
