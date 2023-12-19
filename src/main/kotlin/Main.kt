@@ -52,7 +52,10 @@ fun LongRange.transform(transformationMaps: List<TransformationMap>): List<LongR
         val offset = it.destinationRangeStart - it.sourceRangeStart
         val intersectingSourceRangeStart = it.sourceRangeStart.coerceAtLeast(first)
         val intersectingDestinationRangeStart = intersectingSourceRangeStart + offset
-        val intersectingRangeLength = it.rangeLength.coerceAtMost(last - intersectingSourceRangeStart + 1)
+
+        val intersectingRangeLength = (it.rangeLength + it.sourceRangeStart - intersectingSourceRangeStart)
+            .coerceAtMost(last - intersectingSourceRangeStart + 1)
+
         TransformationMap(
             destinationRangeStart = intersectingDestinationRangeStart,
             sourceRangeStart = intersectingSourceRangeStart,
@@ -64,7 +67,7 @@ fun LongRange.transform(transformationMaps: List<TransformationMap>): List<LongR
         if (intersectingTransformationMaps.isEmpty()) {
             add(first..last)
         } else {
-            val lastTransformed = intersectingTransformationMaps.fold(first) { first, transformationMap ->
+            val oneAfterLastTransformed = intersectingTransformationMaps.fold(first) { first, transformationMap ->
                 val sourceRangeStart = transformationMap.sourceRangeStart
                 if (first < sourceRangeStart) add(first until sourceRangeStart)
 
@@ -73,11 +76,9 @@ fun LongRange.transform(transformationMaps: List<TransformationMap>): List<LongR
                 val destinationRangeEnd = destinationRangeStart + rangeLength
 
                 add(destinationRangeStart until destinationRangeEnd)
-
-                val sourceRangeLast = sourceRangeStart + rangeLength - 1
-                sourceRangeLast
+                sourceRangeStart + rangeLength
             }
-            if (last > lastTransformed) add(lastTransformed + 1..last)
+            if (last >= oneAfterLastTransformed) add(oneAfterLastTransformed..last)
         }
     }
 }
